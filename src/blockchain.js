@@ -56,7 +56,7 @@ class Blockchain {
      * or reject if an error happen during the execution.
      * You will need to check for the height to assign the `previousBlockHash`,
      * assign the `timestamp` and the correct `height`...At the end you need to 
-     * create the `block hash` and push the block into the chain array. Don't for get 
+     * create the `block hash` and push the block into the chain array. Don't forget 
      * to update the `this.height`
      * Note: the symbol `_` in the method name indicates in the javascript convention 
      * that this method is a private method. 
@@ -64,7 +64,24 @@ class Blockchain {
     _addBlock(block) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-           
+            let previousBlockHash = '0';
+            
+            if(block){
+                block.height = self.chain.length + 1;
+                block.time = new Date().getTime().toString().slice(0,-3);
+                block.hash = SHA256(block.data);
+
+                if(self.chain.length){
+                    previousBlockHash = self.chain[self.chain.length -1].hash;
+                }
+                block.previousBlockHash = previousBlockHash;
+
+                self.chain.push(block);
+                self.height = self.chain.length;
+                resolve(block);
+            } else {
+                reject(new Error('No block has been passed in'))
+            }
         });
     }
 
@@ -78,7 +95,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            
+            resolve(`$address :${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
     }
 
