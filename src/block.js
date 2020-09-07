@@ -69,7 +69,7 @@ class Block {
 
         return new Promise((resolve, reject) => {
             if(self.height > 0){
-                resolve(JSON.parse(hex2ascii(self.data)));
+                resolve(JSON.parse(hex2ascii(self.body)));
             }
             else {
                 reject(new Error('no data on genesis block')); //Genesis block error

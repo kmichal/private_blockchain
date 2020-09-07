@@ -67,14 +67,14 @@ class Blockchain {
             let previousBlockHash = '0';
             
             if(block){
-                block.height = self.chain.length + 1;
+                block.height = self.height + 1;
                 block.time = new Date().getTime().toString().slice(0,-3);
-                block.hash = SHA256(block.data);
+                block.hash = SHA256(block.body).toString();
 
                 if(self.chain.length){
                     previousBlockHash = self.chain[self.chain.length -1].hash;
+                    block.previousBlockHash = previousBlockHash;
                 }
-                block.previousBlockHash = previousBlockHash;
 
                 self.chain.push(block);
                 self.height = self.chain.length;
@@ -85,7 +85,7 @@ class Blockchain {
         });
     }
 
-    /**
+    /** 
      * The requestMessageOwnershipVerification(address) method
      * will allow you  to request a message that you will use to
      * sign it with your Bitcoin Wallet (Electrum or Bitcoin Core)
@@ -119,7 +119,23 @@ class Blockchain {
     submitStar(address, message, signature, star) {
         let self = this;
         return new Promise(async (resolve, reject) => {
-            
+            const max_time_elapsed = 5*60; //5 minutes
+            let timeSubmitted = parseInt(message.split(':')[1]);
+            let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
+
+            if(currentTime - timeSubmitted <= max_time_lapse){
+                
+                if(bitcoinMessage.verify(message, address, signature)){
+                    let newBlock = new Block({ address: address, star: star });
+                    self._addBlock(block).then(b => resolve(b))
+                } else {
+                    reject('verification failed');
+                }
+            }
+            else {
+                reject('Too much time has elapsed');
+            }
+
         });
     }
 
@@ -132,7 +148,15 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-           
+           let foundBlock = [];
+
+           foundBlock = self.chain.filter(block => block.hash == hash);
+
+           if(foundBlock.length){
+                resolve(foundBlock[0]);
+           }
+           resolve(false);
+
         });
     }
 
@@ -144,9 +168,11 @@ class Blockchain {
     getBlockByHeight(height) {
         let self = this;
         return new Promise((resolve, reject) => {
-            let block = self.chain.filter(p => p.height === height)[0];
-            if(block){
-                resolve(block);
+            let block = self.chain.filter(p => {
+                return p.height == height
+            });
+            if(block && block.length){
+                resolve(block[0]);
             } else {
                 resolve(null);
             }
@@ -163,7 +189,13 @@ class Blockchain {
         let self = this;
         let stars = [];
         return new Promise((resolve, reject) => {
-            
+            stars = self.chain.map(function(block){
+                block.getBData().then(function(bdata){
+                    if(bdata.address == address){
+                        resolve(bdata);
+                    }
+                });
+            });
         });
     }
 
@@ -177,7 +209,18 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            
+            for(let i = self.chain.length-1; i >= 0; i--){
+                self.chain[i].validate().then(isValid => {
+                    if(!isValid){
+                        errorLog.push('Block #' + self.chain[i].height + ' is not valid');
+                    }
+                    if(i > 0 && self.chain[i-1].hash !== self.chain[i].previousBlockHash){
+                        errorLog.push('Previous block hash does not match');
+                    }
+                })
+            }
+
+            resolve(errorLog);
         });
     }
 
