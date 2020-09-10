@@ -39,11 +39,11 @@ class Block {
         let self = this;
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
-            let bodyHash = sha256(self.body);                             
+            let blockHash = sha256(JSON.stringify(self)).toString();                             
             // Recalculate the hash of the Block
             // Comparing if the hashes changed            
             // Returning the Block is valid
-            if(bodyHash === self.hash){
+            if(blockHash === self.hash){
                 resolve(true);
             } else {
                 // Returning the Block is not valid

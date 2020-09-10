@@ -95,7 +95,7 @@ class Blockchain {
      */
     requestMessageOwnershipVerification(address) {
         return new Promise((resolve) => {
-            resolve(`$address :${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
+            resolve(`${address}:${new Date().getTime().toString().slice(0,-3)}:starRegistry`);
         });
     }
 
@@ -123,11 +123,11 @@ class Blockchain {
             let timeSubmitted = parseInt(message.split(':')[1]);
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
 
-            if(currentTime - timeSubmitted <= max_time_lapse){
+            if(currentTime - timeSubmitted <= max_time_elapsed){
                 
                 if(bitcoinMessage.verify(message, address, signature)){
-                    let newBlock = new Block({ address: address, star: star });
-                    self._addBlock(block).then(b => resolve(b))
+                    let newBlock = new BlockClass.Block({ address: address, star: star });
+                    self._addBlock(newBlock).then(b => resolve(b)).catch(e => console.log(e))
                 } else {
                     reject('verification failed');
                 }
