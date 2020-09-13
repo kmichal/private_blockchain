@@ -77,7 +77,7 @@ class Blockchain {
                 }
 
                 self.chain.push(block);
-                self.height = self.chain.length;
+                self.height = self.chain.length -1;
                 resolve(block);
             } else {
                 reject(new Error('No block has been passed in'))
@@ -187,15 +187,21 @@ class Blockchain {
      */
     getStarsByWalletAddress (address) {
         let self = this;
-        let stars = [];
-        return new Promise((resolve, reject) => {
-            stars = self.chain.map(function(block){
-                block.getBData().then(function(bdata){
-                    if(bdata.address == address){
-                        resolve(bdata);
-                    }
-                });
+        
+        return new Promise(async (resolve, reject) => {
+            const stars = self.chain.map(async function(block){
+                let bdata = await block.getBData();
+                
+                if(bdata.address == address){
+                    return bdata;
+                }              
+                
+            
             });
+
+            let blockData = await Promise.all(stars);
+
+            resolve(blockData.filter(b => b != null));
         });
     }
 
