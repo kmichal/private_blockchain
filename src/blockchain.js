@@ -216,14 +216,16 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             for(let i = self.chain.length-1; i >= 0; i--){
-                self.chain[i].validate().then(isValid => {
-                    if(!isValid){
-                        errorLog.push('Block #' + self.chain[i].height + ' is not valid');
-                    }
-                    if(i > 0 && self.chain[i-1].hash !== self.chain[i].previousBlockHash){
-                        errorLog.push('Previous block hash does not match');
-                    }
-                })
+                
+                let isValid = await self.chain[i].validate();
+
+                if(!isValid){
+                    errorLog.push('Block #' + self.chain[i].height + ' is not valid');
+                }
+                if(i > 0 && self.chain[i-1].hash !== self.chain[i].previousBlockHash){
+                    errorLog.push('Previous block hash does not match');
+                }
+
             }
 
             resolve(errorLog);
